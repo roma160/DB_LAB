@@ -22,19 +22,8 @@ def main_window():
     professors_button = Button(window, text="Викладачі", command=professors_window)
     professors_button.pack(pady=10)
 
-    # subjects_button = Button(window, text="Список предметів", command=subjects_window)
-    # subjects_button.pack(pady=10)
-
-    student_lessons_button = Button(window, text="Список пар студента", command=student_lessons_window)
-    student_lessons_button.pack(pady=10)
-
-    # add_professor_button = Button(window, text="Додати викладача", command=add_professor_window)
-    # add_professor_button.pack(pady=10)
-
-    # add_student_button = Button(window, text="Додати студента", command=add_student_window)
-    # add_student_button.pack(pady=10)
-
-    # add_lesson_button =
+    students_button = Button(window, text="Список студентів", command=students_window)
+    students_button.pack(pady=10)
 
     window.mainloop()
 
@@ -161,24 +150,19 @@ def add_professor_window():
     save_button.pack()
 
 
-def student_lessons_window():
-    student_name = simpledialog.askstring("Ім'я студента", "Введіть ім'я студента\t\t\t\t")
-    if not student_name:
-        messagebox.showwarning("Увага!", "Введіть ім'я студента!")
-        return
-
+def student_lessons_window(student_id):
     # вибираємо групу, до якої належить студент
     query = f"""SELECT * FROM Students
-WHERE '{student_name}' LIKE CONCAT('%', Students.FirstName, '%')
-	AND '{student_name}' LIKE CONCAT('%', Students.LastName, '%')
+WHERE Students.StudentId = {student_id}
 """
     cursor.execute(query)
     result = cursor.fetchone()
     if not result:
-        messagebox.showinfo("Увага!", f"Не було знайдено студента {student_name}!")
+        messagebox.showinfo("Увага!", f"Не було знайдено студента!")
         return
 
-    group_id = result[0]
+    _, f_name, l_name, group_id = result
+    student_name = f_name + " " + l_name
 
     query = "SELECT GroupName FROM new_schema.Groups WHERE GroupId = %s"
     # виконуємо запит з параметром group_id
@@ -186,15 +170,14 @@ WHERE '{student_name}' LIKE CONCAT('%', Students.FirstName, '%')
 
     student_lessons_window = Toplevel(window)
     student_lessons_window.title(f"Заняття студента {student_name}")
-    student_lessons_window.geometry("700x300")
+    student_lessons_window.geometry("600x300")
 
     # виводимо інформацію про студента
     Label(student_lessons_window, text=f"Студент: {student_name}").grid(column=0, row=0)
     Label(student_lessons_window, text=f"Група: {cursor.fetchone()[0]}").grid(column=1, row=0)
 
     # виводимо розклад занять для групи студента
-    query = f"""SELECT Schedule.DayOfWeek, Schedule.StartTime, Schedule.EndTime,
-Subjects.SubjectName, Professors.FirstName, Professors.LastName, Classrooms.ClassroomName
+    query = f"""SELECT Subjects.SubjectName, CONCAT(Professors.FirstName, ' ', Professors.LastName), Classrooms.ClassroomName, Schedule.StartTime, Schedule.EndTime, Schedule.DayOfWeek
 FROM Schedule
 JOIN Subjects ON Schedule.SubjectId = Subjects.SubjectId
 JOIN Professors ON Schedule.ProfessorId = Professors.ProfessorId
@@ -209,7 +192,7 @@ ORDER BY Schedule.DayOfWeek, Schedule.StartTime"""
         student_lessons_window,
         columns=(
             "subject", "professor", "classroom", "start_time", "end_time",
-            "day_of_week", "even_odd"
+            "day_of_week"
         )
     )
     table.heading("subject", text="Предмет")
@@ -218,7 +201,6 @@ ORDER BY Schedule.DayOfWeek, Schedule.StartTime"""
     table.heading("start_time", text="Початок")
     table.heading("end_time", text="Кінець")
     table.heading("day_of_week", text="День тижня")
-    table.heading("even_odd", text="Тиждень")
 
     table.column("#0", width=0, stretch=NO)
     table.column("subject", anchor="center", width=100)
@@ -227,13 +209,56 @@ ORDER BY Schedule.DayOfWeek, Schedule.StartTime"""
     table.column("start_time", anchor="center", width=100)
     table.column("end_time", anchor="center", width=100)
     table.column("day_of_week", anchor="center", width=100)
-    table.column("even_odd", anchor="center", width=100)
 
     # Insert data into the table
     for row in rows:
         table.insert("", "end", values=row)
 
     table.grid(row=1, column=0, columnspan=2)
+
+
+def students_window():
+    # Отримання списку студентів з бази даних
+    cursor.execute(
+        "SELECT Students.FirstName, Students.LastName, new_schema.Groups.GroupName, Students.StudentId FROM Students JOIN new_schema.Groups ON Students.GroupId = new_schema.Groups.GroupId"
+    )
+    students = cursor.fetchall()
+
+    # Створення вікна
+    students_window = Toplevel(window)
+    students_window.title("Студенти")
+    students_window.geometry("400x300")
+
+    # Створення таблиці
+    table = ttk.Treeview(students_window)
+    table["columns"] = ("1", "2", "3", "id")
+    table.column("#0", width=0, stretch=NO)
+    table.column("1", width=100, minwidth=100, anchor="center")
+    table.column("2", width=100, minwidth=100, anchor="center")
+    table.column("3", width=100, minwidth=100, anchor="center")
+    table.column("id", width=0, stretch=NO)
+
+    table.heading("#0", text="")
+    table.heading("1", text="Ім'я")
+    table.heading("2", text="Прізвище")
+    table.heading("3", text="Група")
+
+    # Заповнення таблиці даними
+    for row in students:
+        table.insert("", "end", values=row)
+
+    # Додавання події вибору елемента таблиці
+    def on_select(event):
+        selected_item = table.focus()
+        values = table.item(selected_item, "values")
+        if not values:
+            return
+        # print(values)
+        student_lessons_window(values[-1])
+
+    table.bind("<Double-Button-1>", on_select)
+
+    table.pack(padx=10, pady=10)
 
 
 main_window()
