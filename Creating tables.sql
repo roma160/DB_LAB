@@ -1,3 +1,12 @@
+DROP TABLE IF EXISTS new_schema.Schedule;
+DROP TABLE IF EXISTS new_schema.Tests;
+DROP TABLE IF EXISTS new_schema.Exams;
+DROP TABLE IF EXISTS new_schema.Classrooms;
+DROP TABLE IF EXISTS new_schema.Subjects;
+DROP TABLE IF EXISTS new_schema.Professors;
+DROP TABLE IF EXISTS new_schema.Students;
+DROP TABLE IF EXISTS new_schema.Groups;
+
 -- Створення таблиці "Групи"
 CREATE TABLE new_schema.Groups (
     GroupId INT PRIMARY KEY,
