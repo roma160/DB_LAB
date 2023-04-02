@@ -2,6 +2,8 @@ import config
 import mysql.connector
 from tkinter import *
 import tkinter.ttk as ttk
+import tkinter.simpledialog as simpledialog
+import tkinter.messagebox as messagebox
 
 cnx = mysql.connector.connect(
     user=config.username,
@@ -23,8 +25,8 @@ def main_window():
     # subjects_button = Button(window, text="Список предметів", command=subjects_window)
     # subjects_button.pack(pady=10)
 
-    # student_lessons_button = Button(window, text="Список пар студента", command=student_lessons_window)
-    # student_lessons_button.pack(pady=10)
+    student_lessons_button = Button(window, text="Список пар студента", command=student_lessons_window)
+    student_lessons_button.pack(pady=10)
 
     # add_professor_button = Button(window, text="Додати викладача", command=add_professor_window)
     # add_professor_button.pack(pady=10)
@@ -157,6 +159,82 @@ def add_professor_window():
         add_professor_window, text="Зберегти", command=save_new_professor
     )
     save_button.pack()
+
+
+def student_lessons_window():
+    student_name = simpledialog.askstring("Ім'я студента", "Введіть ім'я студента\t\t\t\t")
+    if not student_name:
+        messagebox.showwarning("Увага!", "Введіть ім'я студента!")
+        return
+
+    # вибираємо групу, до якої належить студент
+    query = f"""SELECT * FROM Students
+WHERE '{student_name}' LIKE CONCAT('%', Students.FirstName, '%')
+	AND '{student_name}' LIKE CONCAT('%', Students.LastName, '%')
+"""
+    cursor.execute(query)
+    result = cursor.fetchone()
+    if not result:
+        messagebox.showinfo("Увага!", f"Не було знайдено студента {student_name}!")
+        return
+
+    group_id = result[0]
+
+    query = "SELECT GroupName FROM new_schema.Groups WHERE GroupId = %s"
+    # виконуємо запит з параметром group_id
+    cursor.execute(query, (group_id,))
+
+    student_lessons_window = Toplevel(window)
+    student_lessons_window.title(f"Заняття студента {student_name}")
+    student_lessons_window.geometry("700x300")
+
+    # виводимо інформацію про студента
+    Label(student_lessons_window, text=f"Студент: {student_name}").grid(column=0, row=0)
+    Label(student_lessons_window, text=f"Група: {cursor.fetchone()[0]}").grid(column=1, row=0)
+
+    # виводимо розклад занять для групи студента
+    query = f"""SELECT Schedule.DayOfWeek, Schedule.StartTime, Schedule.EndTime,
+Subjects.SubjectName, Professors.FirstName, Professors.LastName, Classrooms.ClassroomName
+FROM Schedule
+JOIN Subjects ON Schedule.SubjectId = Subjects.SubjectId
+JOIN Professors ON Schedule.ProfessorId = Professors.ProfessorId
+JOIN Classrooms ON Schedule.ClassroomId = Classrooms.ClassroomId
+WHERE Schedule.GroupId = {group_id}
+ORDER BY Schedule.DayOfWeek, Schedule.StartTime"""
+    cursor.execute(query)
+    rows = cursor.fetchall()
+
+    # Create table to display the student's schedule
+    table = ttk.Treeview(
+        student_lessons_window,
+        columns=(
+            "subject", "professor", "classroom", "start_time", "end_time",
+            "day_of_week", "even_odd"
+        )
+    )
+    table.heading("subject", text="Предмет")
+    table.heading("professor", text="Викладач")
+    table.heading("classroom", text="Аудиторія")
+    table.heading("start_time", text="Початок")
+    table.heading("end_time", text="Кінець")
+    table.heading("day_of_week", text="День тижня")
+    table.heading("even_odd", text="Тиждень")
+
+    table.column("#0", width=0, stretch=NO)
+    table.column("subject", anchor="center", width=100)
+    table.column("professor", anchor="center", width=100)
+    table.column("classroom", anchor="center", width=100)
+    table.column("start_time", anchor="center", width=100)
+    table.column("end_time", anchor="center", width=100)
+    table.column("day_of_week", anchor="center", width=100)
+    table.column("even_odd", anchor="center", width=100)
+
+    # Insert data into the table
+    for row in rows:
+        table.insert("", "end", values=row)
+
+    table.grid(row=1, column=0, columnspan=2)
+
 
 main_window()
 
