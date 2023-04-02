@@ -24,7 +24,7 @@ INSERT INTO new_schema.Groups (GroupId, GroupName) VALUES
 
 -- Створення таблиці "Студенти"
 CREATE TABLE new_schema.Students (
-    StudentId INT PRIMARY KEY,
+    StudentId INT PRIMARY KEY auto_increment,
     FirstName VARCHAR(50) NOT NULL,
     LastName VARCHAR(50) NOT NULL,
     
@@ -41,7 +41,7 @@ INSERT INTO new_schema.Students (StudentId, FirstName, LastName, GroupId) VALUES
 
 -- Створення таблиці "Викладачі"
 CREATE TABLE new_schema.Professors (
-    ProfessorId INT PRIMARY KEY,
+    ProfessorId INT PRIMARY KEY auto_increment,
     FirstName VARCHAR(50) NOT NULL,
     LastName VARCHAR(50) NOT NULL,
     Email VARCHAR(100),
@@ -84,7 +84,7 @@ INSERT INTO new_schema.Classrooms (ClassroomId, ClassroomName) VALUES
 
 -- Створення таблиці "Екзамени"
 CREATE TABLE new_schema.Exams (
-    ExamId INT PRIMARY KEY,
+    ExamId INT PRIMARY KEY auto_increment,
     
     SubjectId INT,
     FOREIGN KEY (SubjectId) REFERENCES Subjects(SubjectId),
@@ -103,7 +103,7 @@ INSERT INTO new_schema.Exams (ExamId, SubjectId, ExamDate, ExamTime, ClassroomId
 
 -- Створення таблиці "Контрольні роботи"
 CREATE TABLE new_schema.Tests (
-    TestId INT PRIMARY KEY,
+    TestId INT PRIMARY KEY auto_increment,
     
     SubjectId INT,
     FOREIGN KEY (SubjectId) REFERENCES Subjects(SubjectId),
@@ -124,7 +124,7 @@ INSERT INTO new_schema.Tests (TestId, SubjectId, TestDate, TestTime, ClassroomId
 
 -- Створення таблиці "Розклад занять"
 CREATE TABLE new_schema.Schedule (
-    ScheduleId INT PRIMARY KEY,
+    ScheduleId INT PRIMARY KEY auto_increment,
     
     SubjectId INT,
     FOREIGN KEY (SubjectId) REFERENCES Subjects(SubjectId),
