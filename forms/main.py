@@ -141,6 +141,7 @@ def add_professor_window():
         query = "INSERT INTO Professors (FirstName, LastName, Email, Phone, Department, Position) VALUES (%s, %s, %s, %s, %s, %s)"
         values = (first_name, last_name, email, phone, department, position)
         cursor.execute(query, values)
+        cnx.commit()
 
         # Закриття вікна
         add_professor_window.destroy()
@@ -509,6 +510,7 @@ def add_schedule_element():
             indexes[6]
         )
         cursor.execute(query, values)
+        cnx.commit()
 
         messagebox.showinfo("Увага!", f"Запис успішно додано!")
 
