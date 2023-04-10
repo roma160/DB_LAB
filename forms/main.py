@@ -226,6 +226,65 @@ ORDER BY Schedule.DayOfWeek, Schedule.StartTime"""
     table.grid(row=1, column=0, columnspan=2)
 
 
+def group_lessons_window(group_id, parent_window):
+    query = "SELECT GroupName FROM new_schema.Groups WHERE GroupId = %s"
+    # виконуємо запит з параметром group_id
+    cursor.execute(query, (group_id,))
+    group_name = cursor.fetchone()[0]
+
+    student_lessons_window = Toplevel(parent_window)
+    student_lessons_window.title(f"Заняття групи {group_name}")
+    student_lessons_window.geometry("600x300+400+100")
+
+    # виводимо розклад занять для групи студента
+    query = f"""SELECT Subjects.SubjectName, CONCAT(Professors.FirstName, ' ', Professors.LastName), Classrooms.ClassroomName, Schedule.StartTime, Schedule.EndTime, Schedule.DayOfWeek
+FROM Schedule
+JOIN Subjects ON Schedule.SubjectId = Subjects.SubjectId
+JOIN Professors ON Schedule.ProfessorId = Professors.ProfessorId
+JOIN Classrooms ON Schedule.ClassroomId = Classrooms.ClassroomId
+WHERE Schedule.GroupId = {group_id}
+ORDER BY Schedule.DayOfWeek, Schedule.StartTime"""
+    cursor.execute(query)
+    rows = cursor.fetchall()
+
+    # Create table to display the student's schedule
+    table = ttk.Treeview(
+        student_lessons_window,
+        columns=(
+            "subject", "professor", "classroom", "start_time", "end_time",
+            "day_of_week"
+        )
+    )
+    table.heading("subject", text="Предмет")
+    table.heading("professor", text="Викладач")
+    table.heading("classroom", text="Аудиторія")
+    table.heading("start_time", text="Початок")
+    table.heading("end_time", text="Кінець")
+    table.heading("day_of_week", text="День тижня")
+
+    table.column("#0", width=0, stretch=NO)
+    table.column("subject", anchor="center", width=100)
+    table.column("professor", anchor="center", width=100)
+    table.column("classroom", anchor="center", width=100)
+    table.column("start_time", anchor="center", width=100)
+    table.column("end_time", anchor="center", width=100)
+    table.column("day_of_week", anchor="center", width=100)
+
+    # Insert data into the table
+    for row in rows:
+        row = list(row)
+        row[-1] = [
+            "Понеділок", "Вівторок", "Середа", "Четвер", "П'ятниця", "Субота",
+            "Неділя"
+        ][row[-1]]
+        table.insert("", "end", values=row)
+
+    table.grid(row=1, column=0, columnspan=2)
+
+    return student_lessons_window
+
+
+
 def students_window():
     # Отримання списку студентів з бази даних
     cursor.execute(
@@ -338,6 +397,16 @@ def add_schedule_element():
     groups_ids, groups_names = get_groups()
     group_entry = ttk.Combobox(add_schedule_window, values=groups_names)
     group_entry.pack()
+
+    group_info_window = [None]
+    def on_group_selected(e):
+        if group_info_window[0] is not None:
+            group_info_window[0].destroy()
+        if group_entry.current() == -1:
+            return
+        group_info_window[0] = group_lessons_window(groups_ids[group_entry.current()], add_schedule_window)
+        add_schedule_window.focus_force()
+    group_entry.bind("<<ComboboxSelected>>", on_group_selected)
 
     professor_label = Label(add_schedule_window, text="Викладач:")
     professor_label.pack()
