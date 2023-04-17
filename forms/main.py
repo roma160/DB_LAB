@@ -161,7 +161,7 @@ def student_lessons_window(student_id):
 WHERE Students.StudentId = {student_id}
 """
     cursor.execute(query)
-    result = cursor.fetchone()
+    result = cursor.fetchone() # [(id, name, su), ...] # None
     if not result:
         messagebox.showinfo("Увага!", f"Не було знайдено студента!")
         return
@@ -175,14 +175,14 @@ WHERE Students.StudentId = {student_id}
 
     student_lessons_window = Toplevel(window)
     student_lessons_window.title(f"Заняття студента {student_name}")
-    student_lessons_window.geometry("600x300")
+    student_lessons_window.geometry("700x300")
 
     # виводимо інформацію про студента
     Label(student_lessons_window, text=f"Студент: {student_name}").grid(column=0, row=0)
     Label(student_lessons_window, text=f"Група: {cursor.fetchone()[0]}").grid(column=1, row=0)
 
     # виводимо розклад занять для групи студента
-    query = f"""SELECT Subjects.SubjectName, CONCAT(Professors.FirstName, ' ', Professors.LastName), Classrooms.ClassroomName, Schedule.StartTime, Schedule.EndTime, Schedule.DayOfWeek
+    query = f"""SELECT Subjects.SubjectName, CONCAT(Professors.FirstName, ' ', Professors.LastName), Classrooms.ClassroomName, Schedule.StartTime, Schedule.EndTime, Schedule.DayOfWeek, Schedule.EvenOdd
 FROM Schedule
 JOIN Subjects ON Schedule.SubjectId = Subjects.SubjectId
 JOIN Professors ON Schedule.ProfessorId = Professors.ProfessorId
@@ -197,7 +197,7 @@ ORDER BY Schedule.DayOfWeek, Schedule.StartTime"""
         student_lessons_window,
         columns=(
             "subject", "professor", "classroom", "start_time", "end_time",
-            "day_of_week"
+            "day_of_week", "even_odd"
         )
     )
     table.heading("subject", text="Предмет")
@@ -206,6 +206,7 @@ ORDER BY Schedule.DayOfWeek, Schedule.StartTime"""
     table.heading("start_time", text="Початок")
     table.heading("end_time", text="Кінець")
     table.heading("day_of_week", text="День тижня")
+    table.heading("even_odd", text="Парність тижня")
 
     table.column("#0", width=0, stretch=NO)
     table.column("subject", anchor="center", width=100)
@@ -214,14 +215,15 @@ ORDER BY Schedule.DayOfWeek, Schedule.StartTime"""
     table.column("start_time", anchor="center", width=100)
     table.column("end_time", anchor="center", width=100)
     table.column("day_of_week", anchor="center", width=100)
+    table.column("even_odd", anchor="center", width=100)
 
     # Insert data into the table
     for row in rows:
         row = list(row)
-        row[-1] = [
+        row[-2] = [
             "Понеділок", "Вівторок", "Середа", "Четвер", "П'ятниця", "Субота",
             "Неділя"
-        ][row[-1]]
+        ][row[-2]]
         table.insert("", "end", values=row)
 
     table.grid(row=1, column=0, columnspan=2)
@@ -235,10 +237,10 @@ def group_lessons_window(group_id, parent_window):
 
     student_lessons_window = Toplevel(parent_window)
     student_lessons_window.title(f"Заняття групи {group_name}")
-    student_lessons_window.geometry("600x300+400+100")
+    student_lessons_window.geometry("700x300+400+100")
 
     # виводимо розклад занять для групи студента
-    query = f"""SELECT Subjects.SubjectName, CONCAT(Professors.FirstName, ' ', Professors.LastName), Classrooms.ClassroomName, Schedule.StartTime, Schedule.EndTime, Schedule.DayOfWeek
+    query = f"""SELECT Subjects.SubjectName, CONCAT(Professors.FirstName, ' ', Professors.LastName), Classrooms.ClassroomName, Schedule.StartTime, Schedule.EndTime, Schedule.DayOfWeek, Schedule.EvenOdd
 FROM Schedule
 JOIN Subjects ON Schedule.SubjectId = Subjects.SubjectId
 JOIN Professors ON Schedule.ProfessorId = Professors.ProfessorId
@@ -253,7 +255,7 @@ ORDER BY Schedule.DayOfWeek, Schedule.StartTime"""
         student_lessons_window,
         columns=(
             "subject", "professor", "classroom", "start_time", "end_time",
-            "day_of_week"
+            "day_of_week", "even_odd"
         )
     )
     table.heading("subject", text="Предмет")
@@ -262,6 +264,7 @@ ORDER BY Schedule.DayOfWeek, Schedule.StartTime"""
     table.heading("start_time", text="Початок")
     table.heading("end_time", text="Кінець")
     table.heading("day_of_week", text="День тижня")
+    table.heading("even_odd", text="Парність тижня")
 
     table.column("#0", width=0, stretch=NO)
     table.column("subject", anchor="center", width=100)
@@ -270,14 +273,15 @@ ORDER BY Schedule.DayOfWeek, Schedule.StartTime"""
     table.column("start_time", anchor="center", width=100)
     table.column("end_time", anchor="center", width=100)
     table.column("day_of_week", anchor="center", width=100)
+    table.column("even_odd", anchor="center", width=100)
 
     # Insert data into the table
     for row in rows:
         row = list(row)
-        row[-1] = [
+        row[-2] = [
             "Понеділок", "Вівторок", "Середа", "Четвер", "П'ятниця", "Субота",
             "Неділя"
-        ][row[-1]]
+        ][row[-2]]
         table.insert("", "end", values=row)
 
     table.grid(row=1, column=0, columnspan=2)
@@ -483,7 +487,7 @@ def add_schedule_element():
 
     even_odd_label = Label(add_schedule_window, text="Парний тиждень:")
     even_odd_label.pack()
-    even_odd_entry = ttk.Combobox(add_schedule_window, values=["Так", "Ні"])
+    even_odd_entry = ttk.Combobox(add_schedule_window, values=["Ні", "Так"])
     even_odd_entry.pack()
 
     def save_new_schedule():
@@ -496,18 +500,43 @@ def add_schedule_element():
         times = ["8:40", "10:15", "10:35", "12:10", "12:20", "13:55", "14:05", "15:40"]
         start_time = datetime.strptime(times[2*indexes[4]], "%H:%M")
         end_time = datetime.strptime(times[2*indexes[4] + 1], "%H:%M")
+        group_id = groups_ids[indexes[1]]
+        day_of_week = indexes[5]
+        even_odd = indexes[6]
+
+        # Checking other times
+        query = "SELECT StartTime, EndTime FROM Schedule Where GroupId = %s and DayOfWeek = %s and EvenOdd = %s;"
+        cursor.execute(query, (group_id, day_of_week, even_odd))
+        is_time_ok = True
+        for row in cursor.fetchall():
+            left = datetime(1900, 1, 1) + row[0]
+            right = datetime(1900, 1, 1) + row[1]
+            if not start_time < left:
+                if end_time < left:
+                    is_time_ok = True
+                    break
+                is_time_ok = start_time > right
+            else:
+                is_time_ok = end_time < left
+
+            if not is_time_ok:
+                break
+
+        if not is_time_ok:
+            messagebox.showerror("Помилка!", f"Додана пара перетинається з уже існуючими для цієї групи!")
+            return
 
         # SQL запит на додавання викладача до таблиці Professors
         query = "INSERT INTO new_schema.Schedule (SubjectId, GroupId, ProfessorId, ClassroomId, StartTime, EndTime, DayOfWeek, EvenOdd) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
         values = (
             subject_ids[indexes[0]],
-            groups_ids[indexes[1]],
+            group_id,
             professors_ids[indexes[2]],
             classrooms_ids[indexes[3]],
             start_time.strftime("%H:%M"),
             end_time.strftime("%H:%M"),
-            indexes[5],
-            indexes[6]
+            day_of_week,
+            even_odd
         )
         cursor.execute(query, values)
         cnx.commit()
