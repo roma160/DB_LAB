@@ -1,12 +1,15 @@
 -- Видалення існуючих таблиць
-DROP TABLE IF EXISTS new_schema.Schedule;
-DROP TABLE IF EXISTS new_schema.Tests;
-DROP TABLE IF EXISTS new_schema.Exams;
-DROP TABLE IF EXISTS new_schema.Classrooms;
-DROP TABLE IF EXISTS new_schema.Subjects;
-DROP TABLE IF EXISTS new_schema.Professors;
-DROP TABLE IF EXISTS new_schema.Students;
-DROP TABLE IF EXISTS new_schema.Groups;
+-- DROP TABLE IF EXISTS new_schema.Schedule;
+-- DROP TABLE IF EXISTS new_schema.Tests;
+-- DROP TABLE IF EXISTS new_schema.Exams;
+-- DROP TABLE IF EXISTS new_schema.Classrooms;
+-- DROP TABLE IF EXISTS new_schema.Subjects;
+-- DROP TABLE IF EXISTS new_schema.Professors;
+-- DROP TABLE IF EXISTS new_schema.Students;
+-- DROP TABLE IF EXISTS new_schema.Groups;
+
+DROP SCHEMA IF EXISTS new_schema;
+CREATE SCHEMA new_schema;
 
 
 -- Створення таблиці "Групи"
