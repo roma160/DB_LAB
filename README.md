@@ -3,6 +3,7 @@
 ## Building and running
 This project uses the Docker Compose, so to build and run everything just execute:
 ```bash
+cd ./forms
 docker-compose up --build
 ```
 
