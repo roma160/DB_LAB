@@ -1,1 +1,1 @@
-python main.py
+docker-compose up --build
