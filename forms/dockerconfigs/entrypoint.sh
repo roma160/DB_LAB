@@ -19,4 +19,5 @@ case $RUN_XTERM in
 esac
 
 exec supervisord -c /app/dockerconfigs/supervisord.conf &
+echo "The server is up and running. To enter GUI visit this link: http://localhost:8080/vnc.html"
 sleep infinity
