@@ -10,7 +10,9 @@ RUN set -ex; \
       supervisor \
       x11vnc \
       xterm \
-      xvfb
+      xvfb \
+      py3-pip \
+      python3-tkinter
 
 # Setup demo environment variables
 ENV HOME=/root \
@@ -25,5 +27,5 @@ ENV HOME=/root \
     RUN_FLUXBOX=yes
 
 COPY . /app
-CMD ["/app/dockerconfigs/entrypoint.sh"]
+CMD "/app/dockerconfigs/entrypoint.sh"
 EXPOSE 8080

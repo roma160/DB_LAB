@@ -1,6 +1,8 @@
 #!/bin/bash
 set -ex
 
+pip install -r /app/requirements.txt
+
 RUN_FLUXBOX=${RUN_FLUXBOX:-yes}
 RUN_XTERM=${RUN_XTERM:-yes}
 
@@ -16,4 +18,5 @@ case $RUN_XTERM in
     ;;
 esac
 
-exec supervisord -c /app/dockerconfigs/supervisord.conf
+exec supervisord -c /app/dockerconfigs/supervisord.conf &
+sleep infinity

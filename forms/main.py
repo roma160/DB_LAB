@@ -1,4 +1,3 @@
-import config
 import mysql.connector
 from tkinter import *
 import tkinter.ttk as ttk
@@ -7,9 +6,10 @@ import tkinter.messagebox as messagebox
 from datetime import time, datetime
 
 cnx = mysql.connector.connect(
-    user=config.username,
-    password=config.password,
-    host='localhost',
+    user="root",
+    password="root",
+    host='db',
+    port="3306",
     database='new_schema'
 )
 cursor = cnx.cursor()
