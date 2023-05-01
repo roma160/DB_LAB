@@ -17,7 +17,7 @@ cursor = cnx.cursor()
 def main_window():
     global window
     window = Tk()
-    window.title("Розклад факультету")
+    window.title("Faculty schedule")
     window.geometry("300x300")
 
     professors_button = Button(window, text="Викладачі", command=professors_window)
@@ -47,7 +47,7 @@ professors_table = None
 def professors_window():
     # Створення вікна
     professor_window = Toplevel(window)
-    professor_window.title("Викладачі")
+    professor_window.title("Professors")
 
     update_button = Button(
         professor_window, text="Оновити", command=refresh_professors
@@ -93,7 +93,7 @@ def professors_window():
 def add_professor_window():
     # Створення вікна
     add_professor_window = Toplevel(window)
-    add_professor_window.title("Додати викладача")
+    add_professor_window.title("Add professor")
     add_professor_window.geometry("250x350")
 
     # Створення елементів для заповнення даних викладача
@@ -174,7 +174,7 @@ WHERE Students.StudentId = {student_id}
     cursor.execute(query, (group_id,))
 
     student_lessons_window = Toplevel(window)
-    student_lessons_window.title(f"Заняття студента {student_name}")
+    student_lessons_window.title(f"Student's schedule {student_name}")
     student_lessons_window.geometry("700x300")
 
     # виводимо інформацію про студента
@@ -236,7 +236,7 @@ def group_lessons_window(group_id, parent_window):
     group_name = cursor.fetchone()[0]
 
     student_lessons_window = Toplevel(parent_window)
-    student_lessons_window.title(f"Заняття групи {group_name}")
+    student_lessons_window.title(f"Group's schedule {group_name}")
     student_lessons_window.geometry("700x300+400+100")
 
     # виводимо розклад занять для групи студента
@@ -299,7 +299,7 @@ def students_window():
 
     # Створення вікна
     students_window = Toplevel(window)
-    students_window.title("Студенти")
+    students_window.title("Students")
     students_window.geometry("400x300")
 
     # Створення таблиці
@@ -388,7 +388,7 @@ def get_classrooms():
 
 def add_schedule_element():
     add_schedule_window = Toplevel(window)
-    add_schedule_window.title("Додати нову пару")
+    add_schedule_window.title("Add new schedule entry")
     add_schedule_window.geometry("300x400")
 
     subject_label = Label(add_schedule_window, text="Предмет:")
